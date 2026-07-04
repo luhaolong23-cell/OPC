@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ project.title }}</h1>
+<p>状态: {{ project.status.value }}</p>
+<p>需求: {{ project.requirement }}</p>
+{% if checkpoint %}
+<p>当前检查点: {{ checkpoint.type }} / {{ checkpoint.status }}</p>
+{% else %}
+<p>当前检查点: none</p>
+{% endif %}
+{% endblock %}

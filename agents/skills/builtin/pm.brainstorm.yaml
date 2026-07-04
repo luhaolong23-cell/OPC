@@ -1,0 +1,19 @@
+{
+  "name": "pm.brainstorm",
+  "version": "1.0",
+  "description": "Explore multiple implementation directions for a requirement.",
+  "role": "pm",
+  "intent": "generate candidate solutions",
+  "instructions": "Explore multiple implementation directions and return JSON with candidate_solutions, assumptions, and risks.",
+  "required_inputs": ["requirement", "conversation"],
+  "optional_inputs": [],
+  "output_keys": ["candidate_solutions", "assumptions", "risks"],
+  "output_schema": {
+    "type": "object",
+    "required": ["candidate_solutions", "assumptions", "risks"]
+  },
+  "allowed_tool_tags": ["repo.read", "repo.search", "code.parse"],
+  "default_tool_chain": ["repo_reader", "rg_search", "py_tree_sitter_parse"],
+  "side_effect_level": "read",
+  "metadata": {"source": "builtin"}
+}

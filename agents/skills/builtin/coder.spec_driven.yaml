@@ -1,0 +1,19 @@
+{
+  "name": "coder.spec_driven",
+  "version": "1.0",
+  "description": "Implement directly against the approved specification.",
+  "role": "coder",
+  "intent": "implement against acceptance criteria",
+  "instructions": "Implement against the approved spec and return JSON with modified_files, acceptance_checks, and summary.",
+  "required_inputs": ["plan", "current_files", "task_description"],
+  "optional_inputs": [],
+  "output_keys": ["modified_files", "acceptance_checks", "summary"],
+  "output_schema": {
+    "type": "object",
+    "required": ["modified_files", "acceptance_checks", "summary"]
+  },
+  "allowed_tool_tags": ["repo.read", "code.patch", "test.run"],
+  "default_tool_chain": ["repo_reader", "patch_applier", "test_runner"],
+  "side_effect_level": "write",
+  "metadata": {"source": "builtin"}
+}

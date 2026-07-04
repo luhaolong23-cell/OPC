@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "opc-development"
+version = "0.1.0"
+description = "Multi-agent software development system MVP"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.124,<1",
+    "httpx>=0.28,<1",
+    "jinja2>=3.1,<4",
+    "openai>=1.99,<2",
+    "pydantic>=2.11,<3",
+    "sqlalchemy>=2.0,<3",
+    "aiosqlite>=0.20,<1",
+    "uvicorn>=0.35,<1",
+    "wecom-aibot-python-sdk>=1.0.2,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9,<10",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools]
+py-modules = ["config", "main"]
+
+[tool.setuptools.packages.find]
+include = ["agents*", "api*", "director*", "graph*", "llm*", "mcp*", "notifications*", "tools*", "wecom_bot_bridge*", "workspace*"]
+exclude = ["archive*", "tests*", "ui*"]

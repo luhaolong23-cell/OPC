@@ -1,0 +1,19 @@
+{
+  "name": "debugger.fix",
+  "version": "1.0",
+  "description": "Diagnose a failure and prepare a corrective patch.",
+  "role": "debugger",
+  "intent": "repair failing code paths",
+  "instructions": "Debug the failure and return JSON with patches and diagnosis.",
+  "required_inputs": ["code_files", "test_results", "error_log"],
+  "optional_inputs": [],
+  "output_keys": ["patches", "diagnosis"],
+  "output_schema": {
+    "type": "object",
+    "required": ["patches", "diagnosis"]
+  },
+  "allowed_tool_tags": ["log.read", "code.patch", "test.run"],
+  "default_tool_chain": ["log_reader", "patch_applier", "test_runner"],
+  "side_effect_level": "write",
+  "metadata": {"source": "builtin"}
+}

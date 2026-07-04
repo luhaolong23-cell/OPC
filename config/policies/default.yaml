@@ -1,0 +1,10 @@
+{
+  "external_tool_tags": [
+    "docs.search",
+    "knowledge.read"
+  ],
+  "write_tool_tags": [
+    "code.patch",
+    "workspace.write"
+  ]
+}

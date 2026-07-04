@@ -1,0 +1,16 @@
+{
+  "body": {
+    "msgid": "msg_123",
+    "chattype": "single",
+    "from": {
+      "userid": "LuHaoLong"
+    },
+    "msgtype": "text",
+    "text": {
+      "content": "开始开发这个项目"
+    }
+  },
+  "headers": {
+    "req_id": "req_123"
+  }
+}

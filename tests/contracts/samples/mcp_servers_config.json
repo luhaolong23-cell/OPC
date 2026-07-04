@@ -1,0 +1,14 @@
+{
+  "servers": [
+    {
+      "name": "context7",
+      "transport": "stdio",
+      "command": ["context7"],
+      "url": null,
+      "env": {},
+      "enabled": true,
+      "timeout_seconds": 5.0,
+      "tags": ["docs"]
+    }
+  ]
+}

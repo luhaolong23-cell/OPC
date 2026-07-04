@@ -1,0 +1,19 @@
+{
+  "name": "reviewer.security_review",
+  "version": "1.0",
+  "description": "Perform a security-focused review of the candidate change.",
+  "role": "reviewer",
+  "intent": "identify security risks",
+  "instructions": "Perform a security review and return JSON with findings, risk_level, and summary.",
+  "required_inputs": ["plan", "code_files", "test_results"],
+  "optional_inputs": [],
+  "output_keys": ["findings", "risk_level", "summary"],
+  "output_schema": {
+    "type": "object",
+    "required": ["findings", "risk_level", "summary"]
+  },
+  "allowed_tool_tags": ["diff.read", "security.scan", "diff.syntax"],
+  "default_tool_chain": ["diff_reader", "semgrep_scan", "difftastic_diff"],
+  "side_effect_level": "read",
+  "metadata": {"source": "builtin"}
+}

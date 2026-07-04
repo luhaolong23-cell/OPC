@@ -1,0 +1,19 @@
+{
+  "mappings": [
+    {
+      "logical_tool": "docs.search",
+      "providers": [
+        {
+          "server": "context7",
+          "remote_tool": "search_docs",
+          "priority": 100
+        },
+        {
+          "server": "local_docs",
+          "remote_tool": "repo_search",
+          "priority": 50
+        }
+      ]
+    }
+  ]
+}

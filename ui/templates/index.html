@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>项目列表</h1>
+<ul>
+  {% for project in projects %}
+  <li><a href="/debug/projects/{{ project.id }}">{{ project.title }}</a> - {{ project.status.value }}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

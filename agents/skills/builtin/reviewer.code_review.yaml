@@ -1,0 +1,19 @@
+{
+  "name": "reviewer.code_review",
+  "version": "1.0",
+  "description": "Perform a focused code review of the proposed change set.",
+  "role": "reviewer",
+  "intent": "identify code review issues",
+  "instructions": "Perform a code review and return JSON with issues, severity, and summary.",
+  "required_inputs": ["plan", "code_files", "test_results"],
+  "optional_inputs": [],
+  "output_keys": ["issues", "severity", "summary"],
+  "output_schema": {
+    "type": "object",
+    "required": ["issues", "severity", "summary"]
+  },
+  "allowed_tool_tags": ["diff.read", "security.scan", "diff.syntax"],
+  "default_tool_chain": ["diff_reader", "semgrep_scan", "difftastic_diff"],
+  "side_effect_level": "read",
+  "metadata": {"source": "builtin"}
+}

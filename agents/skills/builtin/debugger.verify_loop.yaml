@@ -1,0 +1,19 @@
+{
+  "name": "debugger.verify_loop",
+  "version": "1.0",
+  "description": "Plan the next verification loop for a debug session.",
+  "role": "debugger",
+  "intent": "prepare the next debug rerun",
+  "instructions": "Plan the next debug loop and return JSON with patches, rerun_steps, and exit_criteria.",
+  "required_inputs": ["code_files", "test_results", "error_log"],
+  "optional_inputs": [],
+  "output_keys": ["patches", "rerun_steps", "exit_criteria"],
+  "output_schema": {
+    "type": "object",
+    "required": ["patches", "rerun_steps", "exit_criteria"]
+  },
+  "allowed_tool_tags": ["log.read", "code.patch", "test.run"],
+  "default_tool_chain": ["log_reader", "patch_applier", "test_runner"],
+  "side_effect_level": "write",
+  "metadata": {"source": "builtin"}
+}

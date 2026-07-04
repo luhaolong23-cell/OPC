@@ -1,0 +1,18 @@
+{
+  "title": "FastAPI Todo API",
+  "feedback_actions": ["approve", "approve", "approve", "approve"],
+  "sandbox_results": [
+    {
+      "status": "passed",
+      "failure_type": null,
+      "summary": "tests passed",
+      "raw_logs": ""
+    }
+  ],
+  "coder_agent": {
+    "modified_files": {
+      "app.py": "from fastapi import FastAPI\napp = FastAPI()\n\n@app.get('/todos')\ndef list_todos():\n    return []\n",
+      "test_app.py": "def test_placeholder():\n    assert True\n"
+    }
+  }
+}
