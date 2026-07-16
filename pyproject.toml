@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "opc-development"
-version = "0.1.0"
+version = "0.2.0"
 description = "Multi-agent software development system MVP"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -12,6 +12,10 @@ dependencies = [
     "fastapi>=0.124,<1",
     "httpx>=0.28,<1",
     "jinja2>=3.1,<4",
+    "langchain>=0.3,<1",
+    "langchain-openai>=0.3,<1",
+    "langgraph>=0.6,<1",
+    "langsmith>=0.1,<1",
     "openai>=1.99,<2",
     "pydantic>=2.11,<3",
     "sqlalchemy>=2.0,<3",
@@ -29,8 +33,8 @@ dev = [
 testpaths = ["tests"]
 
 [tool.setuptools]
-py-modules = ["config", "main"]
+py-modules = ["config", "main", "observability"]
 
 [tool.setuptools.packages.find]
-include = ["agents*", "api*", "director*", "graph*", "llm*", "mcp*", "notifications*", "tools*", "wecom_bot_bridge*", "workspace*"]
+include = ["agents*", "api*", "director*", "graph*", "llm*", "notifications*", "tools*", "wecom_bot_bridge*", "workspace*"]
 exclude = ["archive*", "tests*", "ui*"]

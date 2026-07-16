@@ -1,7 +1,7 @@
+from pathlib import Path
 from agents.skills.registry import SkillRegistry
 from config import Settings
 from fastapi.testclient import TestClient
-from mcp.mapping import LogicalToolMappingRegistry
 
 from main import create_app
 
@@ -34,6 +34,15 @@ def test_create_app_exposes_health_endpoint() -> None:
     assert response.json() == {"status": "ok"}
 
 
+
+
+def test_settings_from_env_defaults_workspace_root_to_project_new_project(monkeypatch) -> None:
+    monkeypatch.delenv("OPC_WORKSPACE_ROOT", raising=False)
+
+    settings = Settings.from_env()
+
+    assert settings.workspace_root == Path("config.py").resolve().parent / "new_project"
+
 def test_settings_from_env_reads_bridge_notification_configuration(monkeypatch, tmp_path) -> None:
     monkeypatch.setenv("OPC_DATABASE_URL", f"sqlite:///{tmp_path / 'opc.db'}")
     monkeypatch.setenv("OPC_WORKSPACE_ROOT", str(tmp_path / "projects"))
@@ -48,6 +57,15 @@ def test_settings_from_env_reads_bridge_notification_configuration(monkeypatch, 
     assert settings.wecom_bridge_notify_token == "notify-token"
     assert settings.wecom_notify_timeout == 9.5
     assert settings.opc_internal_token == "opc-token"
+
+def test_settings_from_env_normalizes_relative_sqlite_database_url(monkeypatch, tmp_path) -> None:
+    monkeypatch.delenv("OPC_DATABASE_URL", raising=False)
+    monkeypatch.setenv("OPC_WORKSPACE_ROOT", str(tmp_path / "projects"))
+
+    settings = Settings.from_env()
+
+    assert settings.database_url == f"sqlite:///{(Path('config.py').resolve().parent / 'opc.db').as_posix()}"
+
 
 
 def test_settings_from_env_reads_per_agent_models(monkeypatch, tmp_path) -> None:
@@ -99,15 +117,13 @@ def test_create_app_wires_agent_capabilities(tmp_path) -> None:
     }
 
 
-def test_create_app_exposes_runtime_tool_registry_with_policy_and_provider_mappings(tmp_path) -> None:
+def test_create_app_exposes_runtime_tool_registry_with_policy_and_provider_registry(tmp_path) -> None:
     app = create_app(settings=_test_settings(tmp_path))
 
     tool_registry = app.state.tool_registry
 
     assert tool_registry.policy_engine is not None
     assert tool_registry.provider_registry is not None
-    assert tool_registry.provider_registry.mcp_registry is not None
-    assert tool_registry.provider_registry.mappings is not None
 
 
 def test_create_app_can_wire_custom_skill_registry_into_agents(tmp_path) -> None:
@@ -123,11 +139,7 @@ def test_create_app_can_wire_custom_skill_registry_into_agents(tmp_path) -> None
 class LifecycleTrackingToolRegistry:
     def __init__(self) -> None:
         self.events: list[str] = []
-        self.provider_registry = type(
-            "FakeProviderRegistry",
-            (),
-            {"mappings": LogicalToolMappingRegistry.from_file("config/mappings/logical_tools.yaml")},
-        )()
+        self.provider_registry = object()
 
     def start(self) -> None:
         self.events.append("start")
@@ -206,18 +218,9 @@ def test_create_app_exposes_runtime_health_snapshot_endpoint(tmp_path) -> None:
                 "side_effect_level": "read",
             }
         ],
-        "mappings": [
-            {
-                "logical_tool": "docs.search",
-                "providers": [
-                    {"server": "context7", "remote_tool": "search_docs", "priority": 100},
-                    {"server": "local_docs", "remote_tool": "repo_search", "priority": 50},
-                ],
-            }
-        ],
         "skill_sources": [
             {"name": "codex", "skill_count": 1},
-            {"name": "builtin", "skill_count": 15},
+            {"name": "builtin", "skill_count": 16},
         ],
     }
 
@@ -265,7 +268,7 @@ def test_create_app_uses_default_skill_registry_for_runtime_diagnostics(tmp_path
         response = client.get("/healthz/runtime")
 
     assert response.status_code == 200
-    assert response.json()["skill_sources"] == [{"name": "builtin", "skill_count": 15}]
+    assert response.json()["skill_sources"] == [{"name": "builtin", "skill_count": 16}]
 
 
 def test_settings_from_env_reads_director_model(monkeypatch, tmp_path) -> None:

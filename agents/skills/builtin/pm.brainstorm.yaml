@@ -1,19 +1,50 @@
 {
   "name": "pm.brainstorm",
   "version": "1.0",
-  "description": "Explore multiple implementation directions for a requirement.",
+  "description": "Brainstorm a requirement into a short summary, options, risks, constraints, and one next question.",
   "role": "pm",
-  "intent": "generate candidate solutions",
-  "instructions": "Explore multiple implementation directions and return JSON with candidate_solutions, assumptions, and risks.",
-  "required_inputs": ["requirement", "conversation"],
+  "intent": "brainstorm requirement",
+  "instructions": "You are the PM brainstorm skill. Explore multiple implementation directions, then read the requirement and conversation. Return JSON with summary, candidate_solutions, open_questions, assumptions, risks, constraints, recommended_direction, and next_action. Keep it minimal. Prefer 1 to 3 candidate_solutions. If information is missing, ask exactly one highest-leverage question in open_questions[0] and set next_action=ask_question. If the requirement is already clear enough, return open_questions=[] and set next_action=close_brainstorm.",
+  "required_inputs": [
+    "requirement",
+    "conversation"
+  ],
   "optional_inputs": [],
-  "output_keys": ["candidate_solutions", "assumptions", "risks"],
+  "output_keys": [
+    "summary",
+    "candidate_solutions",
+    "open_questions",
+    "assumptions",
+    "risks",
+    "constraints",
+    "recommended_direction",
+    "next_action"
+  ],
   "output_schema": {
     "type": "object",
-    "required": ["candidate_solutions", "assumptions", "risks"]
+    "required": [
+      "summary",
+      "candidate_solutions",
+      "open_questions",
+      "assumptions",
+      "risks",
+      "constraints",
+      "recommended_direction",
+      "next_action"
+    ]
   },
-  "allowed_tool_tags": ["repo.read", "repo.search", "code.parse"],
-  "default_tool_chain": ["repo_reader", "rg_search", "py_tree_sitter_parse"],
+  "allowed_tool_tags": [
+    "repo.read",
+    "repo.search",
+    "code.parse"
+  ],
+  "default_tool_chain": [
+    "repo_reader",
+    "rg_search",
+    "py_tree_sitter_parse"
+  ],
   "side_effect_level": "read",
-  "metadata": {"source": "builtin"}
+  "metadata": {
+    "source": "builtin"
+  }
 }

@@ -17,14 +17,14 @@ class FakeLLMClient:
 
 def test_skill_resolver_returns_skill_by_name() -> None:
     skill = SkillSpec(
-        name="pm.discovery",
+        name="pm.brainstorm",
         instructions="custom instructions",
         required_inputs=("requirement", "conversation"),
         output_keys=("summary", "open_questions", "constraints"),
     )
-    resolver = SkillResolver(skills={"pm.discovery": skill})
+    resolver = SkillResolver(skills={"pm.brainstorm": skill})
 
-    resolved = resolver.resolve("pm.discovery")
+    resolved = resolver.resolve("pm.brainstorm")
 
     assert resolved is skill
 
@@ -32,7 +32,7 @@ def test_skill_resolver_returns_skill_by_name() -> None:
 def test_agent_uses_skill_resolver_when_legacy_skill_dict_is_empty() -> None:
     llm = FakeLLMClient()
     skill = SkillSpec(
-        name="pm.discovery",
+        name="pm.brainstorm",
         instructions="resolver instructions",
         required_inputs=("requirement", "conversation"),
         output_keys=("summary", "open_questions", "constraints"),
@@ -41,7 +41,7 @@ def test_agent_uses_skill_resolver_when_legacy_skill_dict_is_empty() -> None:
         model="gpt-pm",
         llm_client=llm,
         skills={},
-        skill_resolver=SkillResolver(skills={"pm.discovery": skill}),
+        skill_resolver=SkillResolver(skills={"pm.brainstorm": skill}),
     )
 
     agent.run("build todo api")

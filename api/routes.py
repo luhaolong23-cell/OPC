@@ -21,7 +21,7 @@ from api.schemas import (
     WechatEventResponse,
 )
 from config import Settings
-from director.router import ActiveProjectError, UnsupportedConversationError
+from director.router import UnsupportedConversationError
 from director.wechat_message_service import WechatMessageService
 from graph.runtime import FeedbackConflictError, WorkflowService
 from workspace.manager import WorkspaceManager
@@ -41,24 +41,6 @@ def runtime_healthz(request: Request) -> dict[str, object]:
     skill_registry = getattr(request.app.state, 'skill_registry', None)
     providers = tool_registry.health_snapshot() if tool_registry is not None and hasattr(tool_registry, 'health_snapshot') else {}
     tool_specs = tool_registry.list_tool_specs() if tool_registry is not None and hasattr(tool_registry, 'list_tool_specs') else []
-    provider_registry = getattr(tool_registry, 'provider_registry', None)
-    mapping_registry = getattr(provider_registry, 'mappings', None)
-    mappings = []
-    if mapping_registry is not None and hasattr(mapping_registry, '_mappings'):
-        for logical_tool, mapping in sorted(mapping_registry._mappings.items()):
-            mappings.append(
-                {
-                    'logical_tool': logical_tool,
-                    'providers': [
-                        {
-                            'server': provider.server,
-                            'remote_tool': provider.remote_tool,
-                            'priority': provider.priority,
-                        }
-                        for provider in mapping.providers
-                    ],
-                }
-            )
     skill_sources = []
     if skill_registry is not None and hasattr(skill_registry, 'sources'):
         for source in skill_registry.sources:
@@ -78,7 +60,6 @@ def runtime_healthz(request: Request) -> dict[str, object]:
             }
             for spec in tool_specs
         ],
-        'mappings': mappings,
         'skill_sources': skill_sources,
     }
 
@@ -181,8 +162,6 @@ def receive_wechat_event(
         )
     except UnsupportedConversationError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
-    except ActiveProjectError as exc:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
 
 @router.get('/debug/projects', response_class=HTMLResponse)

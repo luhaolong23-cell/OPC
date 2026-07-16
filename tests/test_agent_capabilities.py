@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from agents.factory import build_agent
 from agents.pm import PMAgent
 from agents.profiles import get_agent_profile
+from agents.reviewer import ReviewerAgent
 from agents.skills import get_skill
 from tools.defaults import build_default_tool_registry
 from tools.registry import ToolRegistry
@@ -38,12 +39,21 @@ def test_tool_registry_binds_only_allowed_tools() -> None:
 
 def test_pm_agent_uses_skill_catalog_instructions() -> None:
     llm = FakeLLMClient(payload={"summary": "spec", "open_questions": [], "constraints": []})
-    skill = get_skill("pm.discovery")
+    skill = get_skill("pm.brainstorm")
     agent = PMAgent(model="gpt-pm", llm_client=llm, skills={skill.name: skill})
 
     result = agent.run("build todo api")
 
-    assert result == {"summary": "spec", "open_questions": [], "constraints": []}
+    assert result == {
+        "summary": "spec",
+        "candidate_solutions": [],
+        "open_questions": [],
+        "assumptions": [],
+        "risks": [],
+        "constraints": [],
+        "recommended_direction": None,
+        "next_action": "close_brainstorm",
+    }
     assert llm.instructions == skill.instructions
 
 
@@ -123,3 +133,24 @@ def test_default_tool_registry_includes_curated_external_tool_wrappers() -> None
         "semgrep_scan",
         "difftastic_diff",
     }
+
+
+def test_curated_agents_expose_requested_default_skills() -> None:
+    assert get_agent_profile("pm").default_skill == "pm.brainstorm"
+    assert get_agent_profile("planner").default_skill == "planner.write_tasks"
+    assert get_agent_profile("reviewer").default_skill == "reviewer.code_review"
+
+
+def test_reviewer_agent_uses_code_review_skill_catalog_instructions() -> None:
+    llm = FakeLLMClient(payload={"approved": True, "issues": [], "risk_level": "low", "summary": "ok"})
+    skill = get_skill("reviewer.code_review")
+    agent = ReviewerAgent(model="gpt-reviewer", llm_client=llm, skills={skill.name: skill})
+
+    result = agent.run(
+        plan={"summary": "Build todo api"},
+        code_files={"app.py": "print('ok')\n"},
+        test_results={"status": "passed", "failure_type": None, "summary": "ok", "raw_logs": ""},
+    )
+
+    assert result == {"approved": True, "issues": [], "risk_level": "low", "summary": "ok"}
+    assert llm.instructions == skill.instructions

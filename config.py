@@ -5,6 +5,22 @@ from os import getenv
 from pathlib import Path
 
 
+def _default_sqlite_database_url() -> str:
+    return f"sqlite:///{(Path(__file__).resolve().parent / 'opc.db').as_posix()}"
+
+
+def _normalize_database_url(database_url: str) -> str:
+    prefix = 'sqlite:///'
+    if not database_url.startswith(prefix):
+        return database_url
+    location = database_url.removeprefix(prefix)
+    if not location or location == ':memory:' or Path(location).is_absolute():
+        return database_url
+    project_root = Path(__file__).resolve().parent
+    normalized = (project_root / location).resolve()
+    return f"{prefix}{normalized.as_posix()}"
+
+
 @dataclass(slots=True, frozen=True)
 class Settings:
     app_name: str
@@ -31,11 +47,11 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> "Settings":
-        workspace_root = Path(getenv("OPC_WORKSPACE_ROOT", "/tmp/opc/projects"))
+        workspace_root = Path(getenv("OPC_WORKSPACE_ROOT", str(Path(__file__).resolve().parent / "new_project")))
         default_model = getenv("OPC_LLM_MODEL", "gpt-5")
         return cls(
             app_name=getenv("OPC_APP_NAME", "OPC Development"),
-            database_url=getenv("OPC_DATABASE_URL", "sqlite:///./opc.db"),
+            database_url=_normalize_database_url(getenv("OPC_DATABASE_URL", _default_sqlite_database_url())),
             workspace_root=workspace_root,
             wecom_agent_id=getenv("WECOM_AGENT_ID"),
             wecom_corp_id=getenv("WECOM_CORP_ID"),

@@ -8,7 +8,6 @@ from agents.factory import build_agent
 from agents.skills.registry import SkillRegistry, get_default_registry
 from api.routes import router
 from config import Settings
-from director.agent import DirectorAgent
 from director.router import DirectorRouter
 from director.wechat_message_service import WechatMessageService
 from graph.runtime import WorkflowService
@@ -56,7 +55,7 @@ def create_app(
 
     director_model = settings.director_model or settings.llm_model
     director_router = director_router or DirectorRouter(
-        agent=DirectorAgent(model=director_model, llm_client=_build_llm_client(director_model, settings))
+        agent=build_agent('director', model=director_model, llm_client=_build_llm_client(director_model, settings), tool_registry=tool_registry, skill_registry=skill_registry)
     )
     notification_publisher = notification_publisher or build_notification_publisher(settings)
     pm_model = settings.pm_model or settings.llm_model

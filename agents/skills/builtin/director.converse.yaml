@@ -1,0 +1,46 @@
+{
+  "name": "director.converse",
+  "version": "1.0",
+  "description": "Hold a user-facing conversation, refine the idea, and decide whether it is ready to start a minimal project.",
+  "role": "director",
+  "intent": "converse with user and refine requirement",
+  "instructions": "You are the director conversation skill. Read the user message, session, project memory, and project context. Use tools when they add evidence. Return JSON with reply, requirement_draft, conversation_summary, and ready_to_start. Prefer the smallest concrete default when the user delegates product choices to you. Keep ready_to_start=false until a minimal project can start.",
+  "required_inputs": [
+    "message",
+    "session",
+    "project_context"
+  ],
+  "optional_inputs": [
+    "project_memory"
+  ],
+  "output_keys": [
+    "reply",
+    "requirement_draft",
+    "conversation_summary",
+    "ready_to_start"
+  ],
+  "output_schema": {
+    "type": "object",
+    "required": [
+      "reply",
+      "requirement_draft",
+      "conversation_summary",
+      "ready_to_start"
+    ]
+  },
+  "allowed_tool_tags": [
+    "repo.read",
+    "repo.structure",
+    "repo.search",
+    "docs.search"
+  ],
+  "default_tool_chain": [
+    "repo_reader",
+    "structure_summary",
+    "rg_search"
+  ],
+  "side_effect_level": "read",
+  "metadata": {
+    "source": "builtin"
+  }
+}

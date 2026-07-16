@@ -1,23 +1,48 @@
 from __future__ import annotations
 
-from director.agent import DirectorAction, DirectorAgent, DirectorDecision
-from workspace.state import SessionMode, WechatSessionRecord
+import inspect
+from typing import Any
+
+from director.agent import DirectorAgent, DirectorSystemCommand, DirectorTurn
+from workspace.state import WechatSessionRecord
 
 
 class UnsupportedConversationError(RuntimeError):
     """Raised when the conversation type is outside the MVP scope."""
 
 
-class ActiveProjectError(RuntimeError):
-    """Raised when a user tries to start another active project."""
-
-
-ACTIVE_PROJECT_ERROR_MESSAGE = "你已有进行中的项目，请先发送 状态 或 批准。"
-
 
 class DirectorRouter:
     def __init__(self, agent: DirectorAgent | None = None) -> None:
         self.agent = agent
+
+    def route_system_message(
+        self,
+        message: str,
+        session: WechatSessionRecord | None = None,
+        *,
+        project_context: dict[str, Any] | None = None,
+    ) -> DirectorTurn | None:
+        normalized = message.strip()
+        if normalized == '新会话':
+            return DirectorTurn(message='已开启新会话，当前不再绑定旧项目。', system_command=DirectorSystemCommand.RESET_SESSION)
+        if normalized == '我的项目':
+            return DirectorTurn(message='我来列出项目。', system_command=DirectorSystemCommand.LIST_PROJECTS)
+        if normalized == '状态':
+            return self._project_status_turn(session=session, project_context=project_context)
+        if normalized.startswith('切换项目'):
+            return DirectorTurn(
+                message='切换到指定项目。',
+                system_command=DirectorSystemCommand.SWITCH_PROJECT,
+                target=self._extract_command_target(normalized, '切换项目'),
+            )
+        if normalized.startswith('删除项目'):
+            return DirectorTurn(
+                message='删除指定项目。',
+                system_command=DirectorSystemCommand.DELETE_PROJECT,
+                target=self._extract_command_target(normalized, '删除项目'),
+            )
+        return None
 
     def route_message(
         self,
@@ -25,79 +50,62 @@ class DirectorRouter:
         session: WechatSessionRecord | None = None,
         *,
         is_group_chat: bool = False,
-    ) -> DirectorDecision:
+        project_memory: str | None = None,
+        project_context: dict[str, Any] | None = None,
+    ) -> DirectorTurn:
         normalized = message.strip()
-
         if is_group_chat:
-            raise UnsupportedConversationError("group chat is not supported in MVP")
-
-        if (
-            session is not None
-            and session.mode is SessionMode.PROJECT_ACTIVE
-            and session.active_project_id is not None
-            and self._is_project_query(normalized)
-        ):
-            return DirectorDecision(
-                action=DirectorAction.PROJECT_QUERY,
-                message="我来查询当前项目进度。",
-                project_id=session.active_project_id,
-            )
-
+            raise UnsupportedConversationError('group chat is not supported in MVP')
+        explicit = self.route_system_message(normalized, session=session, project_context=project_context)
+        if explicit is not None:
+            return explicit
         if self.agent is not None and self._should_use_agent():
-            decision = self.agent.run(normalized, session=session)
-            if decision.action is DirectorAction.START_PROJECT:
-                if not self._is_start_project_message(normalized):
-                    return DirectorDecision(
-                        action=DirectorAction.CHAT_REPLY,
-                        message=decision.message,
-                        requirement_draft=decision.requirement_draft,
-                        conversation_summary=decision.conversation_summary,
-                    )
-                if (
-                    session is not None
-                    and session.mode is SessionMode.PROJECT_ACTIVE
-                    and session.active_project_id is not None
-                ):
-                    raise ActiveProjectError(ACTIVE_PROJECT_ERROR_MESSAGE)
-            if decision.action is DirectorAction.PROJECT_QUERY and decision.project_id is None and session is not None:
-                return DirectorDecision(
-                    action=decision.action,
-                    message=decision.message,
-                    project_id=session.active_project_id,
-                    requirement_draft=decision.requirement_draft,
-                    conversation_summary=decision.conversation_summary,
-                )
-            return decision
+            run_signature = inspect.signature(self.agent.run)
+            kwargs: dict[str, Any] = {'session': session}
+            if 'project_memory' in run_signature.parameters:
+                kwargs['project_memory'] = project_memory
+            if 'project_context' in run_signature.parameters:
+                kwargs['project_context'] = project_context
+            return self.agent.run(normalized, **kwargs)
+        return DirectorTurn(message='我先继续和你澄清需求，不会自动进入开发流程。')
 
-        if self._is_start_project_message(normalized):
-            if (
-                session is not None
-                and session.mode is SessionMode.PROJECT_ACTIVE
-                and session.active_project_id is not None
-            ):
-                raise ActiveProjectError(ACTIVE_PROJECT_ERROR_MESSAGE)
-            return DirectorDecision(
-                action=DirectorAction.START_PROJECT,
-                message="已收到开始开发请求，我会创建项目并进入开发流程。",
+    @staticmethod
+    def _extract_command_target(message: str, prefix: str) -> str | None:
+        target = message[len(prefix):].strip()
+        return target or None
+
+    @staticmethod
+    def _project_status_turn(
+        *,
+        session: WechatSessionRecord | None,
+        project_context: dict[str, Any] | None,
+    ) -> DirectorTurn:
+        active_project = project_context.get('active_project') if isinstance(project_context, dict) else None
+        if not isinstance(active_project, dict):
+            return DirectorTurn(
+                message='当前没有进行中的项目。',
+                system_command=DirectorSystemCommand.STATUS,
+                target=session.active_project_id if session is not None else None,
             )
-
-        return DirectorDecision(
-            action=DirectorAction.CHAT_REPLY,
-            message="我先继续和你澄清需求，不会自动进入开发流程。",
+        project_id = active_project.get('id')
+        title = str(active_project.get('title') or project_id or '当前项目')
+        status = str(active_project.get('status') or 'unknown')
+        reply = f'当前项目：{title}，状态：{status}。'
+        checkpoint = project_context.get('checkpoint') if isinstance(project_context, dict) else None
+        if isinstance(checkpoint, dict):
+            checkpoint_type = checkpoint.get('type')
+            checkpoint_status = checkpoint.get('status')
+            if checkpoint_type and checkpoint_status:
+                reply += f' 当前检查点：{checkpoint_type}（{checkpoint_status}）。'
+        return DirectorTurn(
+            message=reply,
+            system_command=DirectorSystemCommand.STATUS,
+            target=project_id if isinstance(project_id, str) else None,
         )
 
     def _should_use_agent(self) -> bool:
         if self.agent is None:
             return False
-        if not hasattr(self.agent, "llm_client"):
+        if not hasattr(self.agent, 'llm_client'):
             return True
-        return getattr(self.agent, "llm_client") is not None
-
-    @staticmethod
-    def _is_start_project_message(message: str) -> bool:
-        return "开始开发" in message
-
-    @staticmethod
-    def _is_project_query(message: str) -> bool:
-        keywords = ("进度", "状态", "阶段", "卡在哪")
-        return any(keyword in message for keyword in keywords)
+        return getattr(self.agent, 'llm_client') is not None

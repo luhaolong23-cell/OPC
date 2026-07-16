@@ -4,8 +4,6 @@ from dataclasses import dataclass, field
 
 from agents.profiles import get_agent_profile
 from agents.runtime.policy_engine import PolicyEngine
-from mcp.mapping import LogicalToolMappingRegistry
-from tools.providers.mcp.provider_registry import MCPProviderRegistry
 from tools.specs import ToolCallRequest, ToolCallResult, ToolSpec
 
 
@@ -21,8 +19,6 @@ class RegisteredExecutor:
 @dataclass
 class ProviderRegistry:
     executors: dict[str, RegisteredExecutor] = field(default_factory=dict)
-    mcp_registry: MCPProviderRegistry | None = None
-    mappings: LogicalToolMappingRegistry | None = None
     policy_engine: PolicyEngine | None = None
 
     def register_executor(
@@ -52,8 +48,6 @@ class ProviderRegistry:
             seen.add(marker)
             if hasattr(executor, "start"):
                 executor.start()
-        if self.mcp_registry is not None:
-            self.mcp_registry.start()
 
     def stop(self) -> None:
         seen: set[int] = set()
@@ -65,8 +59,6 @@ class ProviderRegistry:
             seen.add(marker)
             if hasattr(executor, "stop"):
                 executor.stop()
-        if self.mcp_registry is not None:
-            self.mcp_registry.stop()
 
     def health_snapshot(self) -> dict[str, dict[str, object]]:
         snapshot: dict[str, dict[str, object]] = {}
@@ -82,27 +74,23 @@ class ProviderRegistry:
                 snapshot[registered.provider_name] = dict(status)
             else:
                 snapshot[registered.provider_name] = {"healthy": True, "detail": "unknown"}
-        if self.mcp_registry is not None:
-            snapshot.update(self.mcp_registry.health_snapshot())
         return snapshot
 
     def describe_tool(self, tool_name: str) -> ToolSpec:
         registered = self.executors.get(tool_name)
-        if registered is not None:
-            return ToolSpec(
-                name=tool_name,
-                version="1.0",
-                description=registered.description or tool_name,
-                capability_tags=registered.capability_tags,
-                input_schema={},
-                output_schema={},
-                side_effect_level=registered.side_effect_level,
-                provider=registered.provider_name,
-                metadata={},
-            )
-        if self.mcp_registry is not None and self.mappings is not None:
-            return self.mcp_registry.describe_logical_tool(tool_name, self.mappings)
-        raise KeyError(tool_name)
+        if registered is None:
+            raise KeyError(tool_name)
+        return ToolSpec(
+            name=tool_name,
+            version="1.0",
+            description=registered.description or tool_name,
+            capability_tags=registered.capability_tags,
+            input_schema={},
+            output_schema={},
+            side_effect_level=registered.side_effect_level,
+            provider=registered.provider_name,
+            metadata={},
+        )
 
     def list_tool_specs(self) -> list[ToolSpec]:
         specs = [
@@ -119,8 +107,6 @@ class ProviderRegistry:
             )
             for tool_name, registered in sorted(self.executors.items())
         ]
-        if self.mcp_registry is not None and self.mappings is not None:
-            specs.extend(self.mcp_registry.list_tool_specs(self.mappings))
         return sorted(specs, key=lambda spec: spec.name)
 
     def _enforce_policy(self, tool_name: str, capability_tags: tuple[str, ...], request: ToolCallRequest) -> ToolCallResult | None:
@@ -156,16 +142,6 @@ class ProviderRegistry:
             if blocked is not None:
                 return blocked
             return registered.executor.execute(request)
-        if self.mcp_registry is not None and self.mappings is not None:
-            blocked = self._enforce_policy(request.tool_name, (request.tool_name,), request)
-            if blocked is not None:
-                return blocked
-            return self.mcp_registry.execute_logical_tool(
-                logical_tool=request.tool_name,
-                arguments=request.arguments,
-                context=request.context,
-                mappings=self.mappings,
-            )
         return ToolCallResult(
             ok=False,
             output=None,

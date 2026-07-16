@@ -29,7 +29,7 @@ class BridgeSettings:
             opc_base_url=getenv("OPC_BASE_URL", "http://127.0.0.1:8000"),
             opc_internal_token=getenv("OPC_INTERNAL_TOKEN"),
             notify_token=getenv("WECOM_BRIDGE_NOTIFY_TOKEN"),
-            request_timeout_seconds=float(getenv("WECOM_BRIDGE_REQUEST_TIMEOUT", "10")),
+            request_timeout_seconds=float(getenv("WECOM_BRIDGE_REQUEST_TIMEOUT", "60")),
             reconnect_interval_ms=int(getenv("WECOM_BRIDGE_RECONNECT_INTERVAL", "1000")),
             max_reconnect_attempts=int(getenv("WECOM_BRIDGE_MAX_RECONNECT_ATTEMPTS", "10")),
             heartbeat_interval_ms=int(getenv("WECOM_BRIDGE_HEARTBEAT_INTERVAL", "30000")),

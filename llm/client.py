@@ -4,6 +4,8 @@ import json
 from dataclasses import dataclass
 from typing import Any, Protocol
 
+from observability import wrap_openai_client
+
 
 class StructuredLLMClient(Protocol):
     def generate_json(self, *, instructions: str, input_text: str) -> dict[str, Any]:
@@ -38,6 +40,7 @@ class OpenAIJSONClient:
             from openai import OpenAI
 
             self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+        self.client = wrap_openai_client(self.client)
 
     def generate_json(self, *, instructions: str, input_text: str) -> dict[str, Any]:
         last_error: ValueError | None = None

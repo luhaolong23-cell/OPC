@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from agents.profiles import get_agent_profile
+from agents.runtime.execution_context import ExecutionContext
 from agents.runtime.policy_engine import PolicyEngine
 from tools.providers.registry import ProviderRegistry
 from tools.runtime import BackendToolExecutor
@@ -25,6 +26,31 @@ class BoundAgentTools:
         if self.registry is None:
             return []
         return self.registry.resolve_by_tag(tag)
+
+    def execute(self, name: str, arguments: dict[str, Any], context: ExecutionContext) -> ToolCallResult:
+        if name not in self.tools:
+            return ToolCallResult(
+                ok=False,
+                output=None,
+                error=f"tool {name} is not bound for this agent",
+                provider="bound-agent-tools",
+                latency_ms=0,
+            )
+        if self.registry is None:
+            return ToolCallResult(
+                ok=False,
+                output=None,
+                error="tool registry is not available",
+                provider="bound-agent-tools",
+                latency_ms=0,
+            )
+        return self.registry.execute(
+            ToolCallRequest(
+                tool_name=name,
+                arguments=arguments,
+                context=context,
+            )
+        )
 
 
 @dataclass

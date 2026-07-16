@@ -302,5 +302,6 @@ def test_start_project_passes_director_context_to_pm_and_notifies_open_questions
         }
     ]
     assert publisher.events[1]["event_type"] == "checkpoint_ready"
+    assert "我先只确认一个最关键的问题" in publisher.events[1]["message"]
     assert "你希望使用什么语言？" in publisher.events[1]["message"]
-    assert "是否需要数据库持久化？" in publisher.events[1]["message"]
+    assert "是否需要数据库持久化？" not in publisher.events[1]["message"]

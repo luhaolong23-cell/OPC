@@ -9,16 +9,20 @@ from workspace.state import TaskStatus
 class FakePMAgent:
     def run(self, requirement: str, conversation: list[dict] | None = None) -> dict:
         return {
-            "summary": f"spec for {requirement}",
+            "summary": f"brainstorm for {requirement}",
+            "candidate_solutions": ["cli"],
             "open_questions": [],
+            "assumptions": [],
+            "risks": [],
             "constraints": [],
+            "recommended_direction": "cli",
         }
 
 
 class FakePlannerAgent:
     def run(self, requirement_spec: dict) -> dict:
         return {
-            "summary": f"plan for {requirement_spec['summary']}",
+            "summary": f"writing plan for {requirement_spec['summary']}",
             "tasks": ["create app", "add tests"],
             "risks": [],
         }
@@ -33,7 +37,7 @@ def test_graph_stops_at_requirement_approval_without_feedback() -> None:
     result = graph.invoke({"requirement": "Build a todo api."})
 
     assert result["current_task"] is TaskStatus.WAIT_HUMAN_REQUIREMENT
-    assert result["requirement_spec"]["summary"] == "spec for Build a todo api."
+    assert result["requirement_spec"]["summary"] == "brainstorm for Build a todo api."
     assert result["plan"] is None
 
 
@@ -55,7 +59,7 @@ def test_graph_reaches_plan_wait_after_requirement_approval() -> None:
     )
 
     assert result["current_task"] is TaskStatus.WAIT_HUMAN_PLAN
-    assert result["plan"]["summary"] == "plan for spec for Build a todo api."
+    assert result["plan"]["summary"] == "writing plan for brainstorm for Build a todo api."
 
 
 def test_graph_persists_latest_state_in_memory_checkpointer() -> None:
@@ -70,4 +74,4 @@ def test_graph_persists_latest_state_in_memory_checkpointer() -> None:
     snapshot = graph.get_state(config)
 
     assert snapshot.values["current_task"] is TaskStatus.WAIT_HUMAN_REQUIREMENT
-    assert snapshot.values["requirement_spec"]["summary"] == "spec for Build a todo api."
+    assert snapshot.values["requirement_spec"]["summary"] == "brainstorm for Build a todo api."

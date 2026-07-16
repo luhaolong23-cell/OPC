@@ -4,10 +4,18 @@ from agents.capabilities import AgentProfile
 
 
 _PROFILES = {
+    "director": AgentProfile(
+        name="director",
+        role_name="director",
+        default_skill="director.converse",
+        allowed_skills=("director.converse",),
+        allowed_tools=("repo_reader", "structure_summary", "rg_search"),
+        allowed_tool_tags=("repo.read", "repo.structure", "repo.search", "docs.search"),
+    ),
     "pm": AgentProfile(
         name="pm",
         role_name="pm",
-        default_skill="pm.discovery",
+        default_skill="pm.brainstorm",
         allowed_skills=("pm.discovery", "pm.brainstorm", "pm.specify"),
         allowed_tools=("repo_reader", "rg_search", "py_tree_sitter_parse"),
         allowed_tool_tags=("repo.read", "repo.search", "code.parse", "docs.search"),
@@ -15,7 +23,7 @@ _PROFILES = {
     "planner": AgentProfile(
         name="planner",
         role_name="planner",
-        default_skill="planner.plan",
+        default_skill="planner.write_tasks",
         allowed_skills=("planner.plan", "planner.write_tasks", "planner.verify_scope"),
         allowed_tools=("repo_reader", "structure_summary", "ast_grep_search"),
         allowed_tool_tags=("repo.read", "repo.structure", "code.search"),
@@ -39,7 +47,7 @@ _PROFILES = {
     "reviewer": AgentProfile(
         name="reviewer",
         role_name="reviewer",
-        default_skill="reviewer.audit",
+        default_skill="reviewer.code_review",
         allowed_skills=("reviewer.audit", "reviewer.code_review", "reviewer.security_review"),
         allowed_tools=("diff_reader", "semgrep_scan", "difftastic_diff"),
         allowed_tool_tags=("diff.read", "security.scan", "diff.syntax"),

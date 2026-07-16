@@ -42,3 +42,21 @@ def test_workspace_manager_rejects_second_active_project_for_same_user(workspace
 
     with pytest.raises(ActiveProjectExistsError):
         manager.bind_active_project("alice", second.id)
+
+
+def test_workspace_manager_persists_project_memory_markdown(workspace_manager_factory) -> None:
+    manager = workspace_manager_factory()
+    project = manager.create_project(
+        title="Todo API",
+        requirement="Build a todo api service.",
+    )
+
+    manager.write_project_memory(
+        project.id,
+        "# Project Memory\n\n## Goal\n- Build a todo api.\n",
+    )
+
+    memory_path = manager.project_memory_path(project.id)
+
+    assert memory_path.exists()
+    assert manager.read_project_memory(project.id) == "# Project Memory\n\n## Goal\n- Build a todo api.\n"

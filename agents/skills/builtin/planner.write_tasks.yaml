@@ -1,19 +1,47 @@
 {
   "name": "planner.write_tasks",
   "version": "1.0",
-  "description": "Expand a requirement spec into a detailed task checklist.",
+  "description": "Turn a requirement spec into a short writing-plan style execution plan.",
   "role": "planner",
-  "intent": "expand execution tasks",
-  "instructions": "Expand the requirement spec into an execution checklist and return JSON with tasks, dependencies, and milestones.",
-  "required_inputs": ["requirement_spec"],
+  "intent": "write implementation plan",
+  "instructions": "You are the planner writing-plans skill. Return JSON with summary, tasks, milestones, dependencies, risks, out_of_scope, and open_questions. Keep the plan short and executable. tasks should be concrete implementation steps in order. milestones can be empty if a short plan does not need them. Put non-goals into out_of_scope instead of expanding scope.",
+  "required_inputs": [
+    "requirement_spec"
+  ],
   "optional_inputs": [],
-  "output_keys": ["tasks", "dependencies", "milestones"],
+  "output_keys": [
+    "summary",
+    "tasks",
+    "milestones",
+    "dependencies",
+    "risks",
+    "out_of_scope",
+    "open_questions"
+  ],
   "output_schema": {
     "type": "object",
-    "required": ["tasks", "dependencies", "milestones"]
+    "required": [
+      "summary",
+      "tasks",
+      "milestones",
+      "dependencies",
+      "risks",
+      "out_of_scope",
+      "open_questions"
+    ]
   },
-  "allowed_tool_tags": ["repo.read", "repo.structure", "code.search"],
-  "default_tool_chain": ["repo_reader", "structure_summary", "ast_grep_search"],
+  "allowed_tool_tags": [
+    "repo.read",
+    "repo.structure",
+    "code.search"
+  ],
+  "default_tool_chain": [
+    "repo_reader",
+    "structure_summary",
+    "ast_grep_search"
+  ],
   "side_effect_level": "read",
-  "metadata": {"source": "builtin"}
+  "metadata": {
+    "source": "builtin"
+  }
 }

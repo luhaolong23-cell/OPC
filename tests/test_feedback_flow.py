@@ -151,3 +151,46 @@ def test_requirement_approve_failure_keeps_pending_checkpoint(tmp_path) -> None:
     assert project_after.status is TaskStatus.WAIT_HUMAN_REQUIREMENT
     assert project_after.current_checkpoint_id == checkpoint.id
     assert checkpoint_after.status == "pending"
+
+
+def test_requirement_approval_writes_project_memory_markdown(tmp_path) -> None:
+    manager = WorkspaceManager(
+        database_url=f"sqlite:///{tmp_path / 'opc.db'}",
+        workspace_root=tmp_path / "projects",
+    )
+    manager.initialize()
+    project = manager.create_project(title="Todo API", requirement="Build a todo api.")
+    manager.bind_active_project("alice", project.id)
+    manager.upsert_chat_session(
+        "alice",
+        conversation_summary="用户偏好最小可用，先不要过度设计。",
+        requirement_draft="Build a todo api.",
+    )
+    workflow_service = WorkflowService(
+        manager=manager,
+        pm_agent=FakePMAgent(),
+        planner_agent=FakePlannerAgent(),
+    )
+    running_project, checkpoint = workflow_service.start_project(project.id)
+
+    updated_project, next_checkpoint = workflow_service.apply_feedback(
+        project_id=project.id,
+        checkpoint_id=checkpoint.id,
+        checkpoint_type=checkpoint.type,
+        action="approve",
+        comments="",
+        rejection_reason_type=None,
+        client_version=running_project.version,
+    )
+
+    memory = manager.read_project_memory(project.id)
+
+    assert updated_project.status is TaskStatus.WAIT_HUMAN_PLAN
+    assert next_checkpoint is not None
+    assert "# Project Memory" in memory
+    assert "## Goal" in memory
+    assert "Build a todo api." in memory
+    assert "## User Preferences" in memory
+    assert "用户偏好最小可用，先不要过度设计。" in memory
+    assert "## Decisions" in memory
+    assert "requirement_review approved" in memory

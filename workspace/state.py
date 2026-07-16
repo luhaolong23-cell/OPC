@@ -50,6 +50,7 @@ class WechatSessionRecord:
     active_project_id: str | None
     conversation_summary: str
     last_requirement_draft: str | None
+    pending_next_step: str | None
     created_at: datetime
     updated_at: datetime
 
@@ -69,12 +70,20 @@ class RequirementSpec(TypedDict):
     summary: str
     open_questions: list[str]
     constraints: list[str]
+    candidate_solutions: NotRequired[list[str]]
+    assumptions: NotRequired[list[str]]
+    risks: NotRequired[list[str]]
+    recommended_direction: NotRequired[str | None]
 
 
 class Plan(TypedDict):
     summary: str
     tasks: list[str]
     risks: list[str]
+    milestones: NotRequired[list[str]]
+    dependencies: NotRequired[list[str]]
+    out_of_scope: NotRequired[list[str]]
+    open_questions: NotRequired[list[str]]
 
 
 class ReviewReport(TypedDict):
@@ -103,6 +112,7 @@ class DevelopmentState(TypedDict):
     current_task: TaskStatus
     conversation: NotRequired[list[dict[str, str]] | None]
     requirement_spec: NotRequired[RequirementSpec | None]
+    requirement_turn_mode: NotRequired[str | None]
     plan: NotRequired[Plan | None]
     human_feedback: NotRequired[HumanFeedback | None]
     code_files: NotRequired[dict[str, str] | None]

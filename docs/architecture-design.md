@@ -8,7 +8,7 @@
 
 `Director -> PM -> Planner -> Coder -> Debugger -> Reviewer`
 
-并通过 `workspace`、`tools`、`mcp`、`wecom_bot_bridge` 把状态、工具和外部接入串起来。
+并通过 `workspace`、`tools`、`wecom_bot_bridge` 把状态、工具和外部接入串起来。
 
 ## 运行入口
 
@@ -62,19 +62,13 @@
 - Agent 通过 profile 决定允许使用哪些 skill。
 - 新 skill 先接入 `config/skills/` 或 `agents/skills/builtin/`，再进入运行时。
 
-### 5. Tool / MCP 层
+### 5. Tool 层
 
 - `tools/`
   - 本地工具注册、策略控制、provider 路由、沙箱测试执行。
-- `mcp/`
-  - MCP server 配置模型、逻辑工具映射、健康检查、fallback 规则。
-- `tools/providers/mcp/`
-  - MCP transport client、provider registry、tool/resource adapter。
 
 这里保留两层不是重复：
 
-- `mcp/` 是配置和领域模型层。
-- `tools/providers/mcp/` 是运行时接入层。
 
 ### 6. 状态层
 
@@ -84,7 +78,6 @@
 
 ## 配置边界
 
-- `config/mcp_servers/`：MCP server 配置
 - `config/mappings/`：逻辑工具到 provider 的映射
 - `config/policies/`：tool policy
 - `config/skills/`：skill source 配置
